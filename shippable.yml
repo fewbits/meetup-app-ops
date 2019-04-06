@@ -77,7 +77,7 @@ jobs:
   - name: cd_docker_platform_manifest
     type: manifest
     steps:
-     - IN: cd_docker_platform_image
+     - IN: meetup-assembly-lines_img_dh
      - IN: cd_docker_platform_options
      - IN: cd_docker_platform_params
 
