@@ -18,7 +18,7 @@ resources:
     versionTemplate:
       sourceName: "lowbit/meetup-assembly-lines"
       isPull: false
-      versionName: "master.2"
+      versionName: "master.6"
 
   - name: cd_docker_platform_cluster
     type: cluster
