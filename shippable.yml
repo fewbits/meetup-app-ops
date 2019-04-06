@@ -13,6 +13,34 @@ resources:
       sourceName: "tbd"
       region: "us-east1-d"
 
+  - name: cd_docker_platform_image
+    type: image
+    versionTemplate:
+      sourceName: "fewbits/meetup-assembly-lines"
+      isPull: false
+      versionName: "master.2"
+
+  - name: cd_docker_platform_cluster
+    type: cluster
+    integration: "google-cloud"
+    versionTemplate:
+      sourceName : "test-cluster"
+      region: "us-east1-d"
+      namespace: "shippable"
+
+  - name: cd_docker_platform_options
+    type: dockerOptions
+    versionTemplate:
+      portMappings:
+        - 80:3000
+
+  - name: cd_docker_platform_params
+    type: params
+    versionTemplate:
+      params:
+        ENVIRONMENT: "test"
+
+
 jobs:
   - name: prov_gcp_gke
     type: runSh
@@ -45,3 +73,18 @@ jobs:
     on_success:
       script:
         - shipctl put_resource_state_multi gcp_gke_cluster "versionName=$cluster_name" "sourceName=$cluster_name" "region=$cluster_zone"
+
+  - name: cd_docker_platform_manifest
+    type: manifest
+    steps:
+     - IN: cd_docker_platform_image
+     - IN: cd_docker_platform_options
+     - IN: cd_docker_platform_params
+
+  - name: cd_docker_platform_deploy
+    type: deploy
+    steps:
+      - IN: cd_docker_platform_manifest
+      - IN: cd_docker_platform_cluster
+      - TASK: managed
+        deployMethod: replace
