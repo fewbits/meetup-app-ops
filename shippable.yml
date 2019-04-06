@@ -16,7 +16,7 @@ resources:
   - name: cd_docker_platform_image
     type: image
     versionTemplate:
-      sourceName: "fewbits/meetup-assembly-lines"
+      sourceName: "lowbit/meetup-assembly-lines"
       isPull: false
       versionName: "master.2"
 
