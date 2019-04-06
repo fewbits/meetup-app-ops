@@ -1,0 +1,47 @@
+---
+resources:
+  - name: prov_gcp_gke_creds
+    type: cliConfig
+    integration: "google-cloud"
+    versionTemplate:
+      region: "us-east1"
+
+  - name: gcp_gke_cluster
+    type: cluster
+    integration: "google-cloud"
+    versionTemplate:
+      sourceName: "tbd"
+      region: "us-east1-d"
+
+jobs:
+  - name: prov_gcp_gke
+    type: runSh
+    steps:
+      - IN: prov_gcp_gke_creds
+        switch: off
+      - TASK:
+          name: prov_cluster
+          runtime:
+            options:
+              env:
+                - cluster_name: "test-cluster"
+                - cluster_zone: "us-east1-d"
+                - machine_type: "n1-standard-1"
+                - machine_count: 3
+                - volume_size: 30
+          script:
+            - |
+                # check if the cluster already exists on GKE
+                response=$(gcloud container clusters describe $cluster_name --zone $cluster_zone || echo "ClusterNotFound")
+                if [[ $response = "ClusterNotFound" ]]
+                  then
+                    echo "cluster not found, creating cluster"
+                    gcloud container clusters create $cluster_name --num-nodes=$machine_count --machine-type=$machine_type --disk-size=$volume_size --zone=$cluster_zone
+                  else
+                    echo "cluster already exists, skipping creating cluster"
+                fi
+      - OUT: gcp_gke_cluster
+        overwrite: true
+    on_success:
+      script:
+        - shipctl put_resource_state_multi gcp_gke_cluster "versionName=$cluster_name" "sourceName=$cluster_name" "region=$cluster_zone"
