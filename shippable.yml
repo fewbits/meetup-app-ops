@@ -104,6 +104,8 @@ jobs:
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
+      # Precisamos do IP da instância
+      - IN: vm_test
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
