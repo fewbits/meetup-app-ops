@@ -6,7 +6,7 @@
     - name: Creating Instance
       tags: dns
       gce:
-        credentials_file: "~/Documents/gcp.json"
+        credentials_file: "gcp_key.json"
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral

@@ -11,14 +11,14 @@ resources:
     type: integration
     integration: google-cloud
 
-  - name: vm
-    type: params
-    versionTemplate:
-      params:
-        SEED: initial_version
+  # - name: vm
+  #   type: params
+  #   versionTemplate:
+  #     params:
+  #       SEED: initial_version
 
 jobs:
-  - name: vm_create
+  - name: deploy_test
     type: runSh
     steps:
       - IN: meetup-app-ops
@@ -26,29 +26,29 @@ jobs:
       - IN: google_cloud
         switch: off
       - TASK:
-          name: create_vm
+          name: deploy_test
           runtime:
             options:
               env:
-                - STATE_RES_NAME: "vm"
-                - gce_name: "meetup_test"
-                - gce_zone: "us-east1-d"
-                - gce_machine_type: "n1-standard-1"
-                - gce_image: "ubuntu-1604-xenial-v20180522"
-                - gce_tag_Role: "demo-machines"
-                - gce_count: 1
-                - gce_volume_size: 30
-                - GCE_PROJECT: "My First Project"
-                - GCE_EMAIL: "lowbit@lowbit.com.br"
+          #       - STATE_RES_NAME: "vm"
+          #       - gce_name: "meetup_test"
+          #       - gce_zone: "us-east1-d"
+          #       - gce_machine_type: "n1-standard-1"
+          #       - gce_image: "ubuntu-1604-xenial-v20180522"
+          #       - gce_tag_Role: "demo-machines"
+          #       - gce_count: 1
+          #       - gce_volume_size: 30
+          #       - GCE_PROJECT: "My First Project"
+          #       - GCE_EMAIL: "lowbit@lowbit.com.br"
                 - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
           script:
             - pip install apache-libcloud backports.ssl_match_hostname
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
-            - shipctl replace variables.yml inventory/gce.ini
-            - ansible-playbook -v gce_prov_playbook.yml
-      - OUT: vm
-        overwrite: true
+            # - shipctl replace variables.yml inventory/gce.ini
+            - ansible-playbook gcp_deploy.yml
+      # - OUT: vm
+      #   overwrite: true
 
 # resources:
 #   - name: google_credentials
