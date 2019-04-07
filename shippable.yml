@@ -121,5 +121,4 @@ jobs:
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
             # Chamo a automação
-            - env
-            # - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSION} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+            - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
