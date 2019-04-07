@@ -45,8 +45,9 @@ jobs:
   - name: prov_gcp_gke
     type: runSh
     steps:
+      - IN: cd_docker_platform_manifest
       - IN: prov_gcp_gke_creds
-        switch: off
+        switch: on
       - TASK:
           name: prov_cluster
           runtime:
