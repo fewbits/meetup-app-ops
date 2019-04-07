@@ -20,13 +20,13 @@ resources:
       isPull: false
       versionName: "master.6"
 
-  - name: cd_docker_platform_cluster
-    type: cluster
-    integration: "google-cloud"
-    versionTemplate:
-      sourceName : "test-cluster"
-      region: "us-east1-d"
-      namespace: "shippable"
+  # - name: cd_docker_platform_cluster
+  #   type: cluster
+  #   integration: "google-cloud"
+  #   versionTemplate:
+  #     sourceName : "test-cluster"
+  #     region: "us-east1-d"
+  #     namespace: "shippable"
 
   - name: cd_docker_platform_options
     type: dockerOptions
@@ -87,6 +87,6 @@ jobs:
     steps:
       - IN: prov_gcp_gke
       - IN: cd_docker_platform_manifest
-      - IN: cd_docker_platform_cluster
+      - IN: gcp_gke_cluster
       - TASK: managed
         deployMethod: replace
