@@ -1,0 +1,5 @@
+---
+# tasks file for system-timezone
+- name: Configuring Timezone
+  timezone:
+    name: "{{ system_timezone }}"

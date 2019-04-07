@@ -1,0 +1,4 @@
+[Service]
+Environment="HTTP_PROXY=http://{% if proxy_auth == 'true' %}{{ proxy_user }}:{{ proxy_pass }}@{% endif %}{{ proxy_host }}:{{ proxy_port }}/"
+Environment="HTTPS_PROXY=http://{% if proxy_auth == 'true' %}{{ proxy_user }}:{{ proxy_pass }}@{% endif %}{{ proxy_host }}:{{ proxy_port }}/"
+Environment="NO_PROXY={{ proxy_exceptions }}"

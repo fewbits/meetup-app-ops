@@ -1,0 +1,44 @@
+---
+# handlers file for docker-install
+- name: Reloading systemd
+  when: ansible_distribution_major_version == "7"
+  shell: systemctl daemon-reload
+
+- name: Restarting Docker
+  service:
+    name: docker
+    enabled: yes
+    state: restarted
+
+- name: Logging in to Docker Registries
+  when: docker_registry_use == true
+  docker_login:
+    registry_url: "{{ item.host }}:{{ item.port }}"
+    username: "{{ item.user|default('') }}"
+    password: "{{ item.pass|default('') }}"
+    state: present
+  with_items: "{{ docker_registry_use_data }}"
+
+- name: Deleting test container
+  docker_container:
+    name: hello-world
+    state: absent
+
+- name: Deleting test image
+  docker_image:
+    name: hello-world
+    state: absent
+
+- name: Pulling test image
+  docker_image:
+    name: hello-world
+    state: present
+
+- name: Running test container
+  docker_container:
+    name: hello-world
+    state: started
+    image: hello-world
+    pull: yes
+    force_kill: yes
+    keep_volumes: false

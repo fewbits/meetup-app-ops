@@ -1,0 +1,124 @@
+---
+# tasks file for docker-install
+- name: Getting installer script (latest version)
+  get_url:
+    url: "https://get.docker.com"
+    dest: /tmp/docker-installer.sh
+    force: yes
+  when: docker_version == "latest"
+
+- name: Getting installer script (specific version)
+  get_url:
+    url: "https://releases.rancher.com/install-docker/{{ docker_version }}.sh"
+    dest: /tmp/docker-installer.sh
+    force: yes
+  when: docker_version != "latest"
+
+- name: Setting installer permissions
+  file:
+    path: /tmp/docker-installer.sh
+    mode: 0755
+
+- name: Checking if Docker is already installed
+  shell: which docker
+  changed_when: docker_installed.rc != 0
+  failed_when: no
+  register: docker_installed
+
+- name: System Update
+  yum:
+    name: "*"
+    state: latest
+  when: docker_installed.rc != 0
+
+- name: Installing Docker
+  shell: "/tmp/docker-installer.sh"
+  notify:
+    - Reloading systemd
+    - Restarting Docker
+    - Deleting test container
+    - Deleting test image
+    - Pulling test image
+    - Running test container
+  when: docker_installed.rc != 0
+
+- name: Creating drop-in directory
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    owner: root
+    group: root
+
+- name: Configuring daemon
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+  notify:
+    - Reloading systemd
+    - Restarting Docker
+    - Logging in to Docker Registries
+    - Deleting test container
+    - Deleting test image
+    - Pulling test image
+    - Running test container
+
+- name: Configuring proxy
+  when: proxy_use == true
+  template:
+    src: proxy.conf.j2
+    dest: /etc/systemd/system/docker.service.d/proxy.conf
+    owner: root
+    group: root
+  notify:
+    - Reloading systemd
+    - Restarting Docker
+    - Logging in to Docker Registries
+    - Deleting test container
+    - Deleting test image
+    - Pulling test image
+    - Running test container
+
+- name: Installing EPEL (Extra Packages for Enterprise Linux)
+  yum:
+    name: epel-release
+    state: present
+
+- name: Installing python-pip package
+  yum:
+    name: python-pip
+    state: present
+  notify:
+    - Reloading systemd
+    - Restarting Docker
+    - Deleting test container
+    - Deleting test image
+    - Pulling test image
+    - Running test container
+
+- name: Installing docker-py PIP package
+  pip:
+    name: docker
+    state: present
+  notify:
+    - Reloading systemd
+    - Restarting Docker
+    - Deleting test container
+    - Deleting test image
+    - Pulling test image
+    - Running test container
+
+- name: Starting docker service
+  systemd:
+    name: docker.service
+    enabled: yes
+    state: started
+
+- name: Creating docker user
+  user:
+    name: docker
+    comment: Docker User
+    home: "{{ docker_user_home }}"
+    group: docker
+    password: "{{ docker_user_pass | password_hash('sha512', 'mysecretsalt') }}"

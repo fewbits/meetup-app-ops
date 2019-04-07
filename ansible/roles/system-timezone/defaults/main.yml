@@ -1,0 +1,3 @@
+---
+# defaults file for system-timezone
+system_timezone: "America/Sao_Paulo"

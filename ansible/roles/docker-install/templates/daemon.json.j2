@@ -1,0 +1,9 @@
+{
+  "storage-driver": "{{ docker_storage_driver }}",
+  {% if docker_registry_use == true %}"insecure-registries": [{% for registry in docker_registry_use_data %}"{{ registry.host }}:{{ registry.port }}", {% endfor %}"127.0.0.1:5000"],
+  {% endif %}"log-driver": "json-file",
+  "log-opts": {
+    "max-size": "{{ docker_log_max_size }}",
+    "max-file": "{{ docker_log_max_file }}"
+  }
+}
