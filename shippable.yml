@@ -126,6 +126,37 @@ jobs:
             # Chamo a automação
             - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
 
+  # Deleta a VM de Testes
+  - name: vm_test_destroy
+    type: runSh
+    steps:
+      # O gatilho para esta atividade é um Teste de Performance bem sucedido
+      - IN: performance_test
+        switch: on
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: off
+      # Vou usar a integração com o Google Cloud
+      - IN: google_cloud
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_test_destroy
+          runtime:
+            options:
+              env:
+                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
+                - meetup_env: test
+          script:
+            # Instalo dependências
+            - pip install apache-libcloud backports.ssl_match_hostname
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Solicito informações de autenticação com a Google Cloud
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            # Chamo a automação
+            - ansible-playbook gcp_instance_destroy.yml --extra-vars "meetup_env=${meetup_env}"
+
   # Criar VM de Produção
   - name: vm_prod_create
     type: runSh
