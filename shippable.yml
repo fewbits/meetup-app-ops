@@ -110,6 +110,9 @@ jobs:
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
+      # E preciso do DNS configurado
+      - IN: dns_test
+        switch: on
       # Também precisamos da versão do app de deploy
       - IN: docker_image
         switch: off
@@ -234,7 +237,10 @@ jobs:
         switch: off
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_prod_config
-        switch: off
+        switch: on
+      # Preciso do DNS de Produção configurado
+      - IN: dns_prod
+        switch: on
       # Também precisamos da versão do app de deploy
       - IN: docker_image
         switch: off
