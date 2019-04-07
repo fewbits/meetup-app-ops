@@ -85,6 +85,7 @@ jobs:
   - name: cd_docker_platform_deploy
     type: deploy
     steps:
+      - IN: prov_gcp_gke
       - IN: cd_docker_platform_manifest
       - IN: cd_docker_platform_cluster
       - TASK: managed
