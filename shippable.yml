@@ -231,7 +231,7 @@ jobs:
     type: runSh
     steps:
       # O gatilho para esta atividade é um Teste de Performance bem sucedido
-      - IN: performance_test
+      - IN: vm_prod_deploy
         switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
