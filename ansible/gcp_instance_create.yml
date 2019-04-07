@@ -24,13 +24,13 @@
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
 
-    - name: Saving Instance to Inventory
-      add_host:
-        name: "meetup-{{ meetup_env }}"
-        ansible_host: "{{ gce_instance_info.instance_data.0.public_ip }}"
-        ansible_user: lowbit_lowbit_com_br
-        ansible_ssh_private_key_file: "{{ instance_key }}"
-        group: meetup
+    # - name: Saving Instance to Inventory
+    #   add_host:
+    #     name: "meetup-{{ meetup_env }}"
+    #     ansible_host: "{{ gce_instance_info.instance_data.0.public_ip }}"
+    #     ansible_user: lowbit_lowbit_com_br
+    #     ansible_ssh_private_key_file: "{{ instance_key }}"
+    #     group: meetup
 
     - name: Waiting for instance to become active (SSH)
       wait_for:
