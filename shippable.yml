@@ -53,6 +53,7 @@ jobs:
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # - shipctl replace variables.yml inventory/gce.ini
+            - env
             - ansible-playbook gcp_deploy.yml --extra-vars "meetup_env=${meetup_env} cloudflare_email=${cloudflare_email} cloudflare_api=${cloudflare_api}"
       # - OUT: vm
       #   overwrite: true
