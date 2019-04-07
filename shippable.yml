@@ -93,3 +93,33 @@ jobs:
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
             # Chamo a automação
             - ansible-playbook gcp_instance_config.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Deploy em Teste
+  - name: vm_test_deploy
+    type: runSh
+    steps:
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: on
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Para fazer o deploy, preciso do ambiente configurado
+      - IN: vm_test_config
+        switch: on
+      # Também precisamos da versão do app de deploy, que também é um gatilho
+      - IN: docker_image
+        switch: on
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_test_deploy
+          runtime:
+            options:
+              env:
+                - meetup_env: test
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Chamo a automação
+            - env
+            # - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSION} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
