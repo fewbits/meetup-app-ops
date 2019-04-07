@@ -44,7 +44,7 @@ jobs:
           script:
             - pip install apache-libcloud backports.ssl_match_hostname
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
-            - echo $(shipctl get_integration_resource_field google_credentials JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             - shipctl replace variables.yml inventory/gce.ini
             - ansible-playbook -v gce_prov_playbook.yml
       - OUT: vm
