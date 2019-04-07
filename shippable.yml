@@ -38,6 +38,7 @@ jobs:
   # Criar VM de Teste
   - name: vm_test_create
     type: runSh
+    dependencyMode: strict
     steps:
       # A imagem docker é um gatilho para esta atividade
       - IN: docker_image
@@ -100,24 +101,27 @@ jobs:
     type: runSh
     dependencyMode: strict
     steps:
-      # Vou usar este repositório
-      - IN: meetup-app-ops
+      # Só podemos fazer deploy se a VM estiver criada
+      - IN: vm_test_create
         switch: on
-      # Vou usar minha chave SSH
-      - IN: lowbit_key
-        switch: off
-      # Precisamos do IP da instância
-      - IN: vm_test
-        switch: off
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
       # E preciso do DNS configurado
       - IN: dns_test
         switch: on
-      # Também precisamos da versão do app de deploy
+      # Por último, precisamos da versão do app de deploy
       - IN: docker_image
         switch: on
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: off
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Precisamos do IP da instância
+      - IN: vm_test
+        switch: off
       # Agora é a tarefa...
       - TASK:
           name: vm_test_deploy
