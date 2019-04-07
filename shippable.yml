@@ -24,13 +24,15 @@ resources:
   - name: vm_test
     type: params
     versionTemplate:
-      external_ip: 0.0.0.0
+      params:
+        external_ip: "0.0.0.0"
 
   # Este recurso representa nossa instância de Produção
   - name: vm_prod
     type: params
     versionTemplate:
-      external_ip: 0.0.0.0
+      params:
+        external_ip: "0.0.0.0"
 
 jobs:
   # Criar VM de Teste
