@@ -7,9 +7,9 @@ resources:
   #     sourceName: "devops-recipes/prov_gcp_gce_ansible"
   #     branch: master
 
-  - name: google_credentials
+  - name: google_cloud
     type: integration
-    integration: google-cloud
+    integration: google_cloud
 
   - name: vm
     type: params
@@ -23,7 +23,7 @@ jobs:
     steps:
       # - IN: gcp_gce_repo
       #   switch: off
-      - IN: google_credentials
+      - IN: google_cloud
         switch: off
       - TASK:
           name: create_vm
