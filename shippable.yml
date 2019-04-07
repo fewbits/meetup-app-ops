@@ -71,6 +71,7 @@ jobs:
   # Configurar VM de Teste
   - name: vm_test_config
     type: runSh
+    dependencyMode: strict
     steps:
       # Vou usar este repositório
       - IN: meetup-app-ops
@@ -166,6 +167,7 @@ jobs:
   # Configurar VM de Produção
   - name: vm_prod_config
     type: runSh
+    dependencyMode: strict
     steps:
       # Vou usar este repositório
       - IN: meetup-app-ops
@@ -231,6 +233,7 @@ jobs:
   # Deleta a VM de Testes
   - name: vm_test_destroy
     type: runSh
+    dependencyMode: strict
     steps:
       # O gatilho para esta atividade é um Teste de Performance bem sucedido
       - IN: vm_prod_deploy
