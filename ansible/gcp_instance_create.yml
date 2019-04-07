@@ -4,7 +4,6 @@
   connection: local
   tasks:
     - name: Creating Instance
-      tags: dns
       gce:
         credentials_file: "gcp_key.json"
         disk_auto_delete: yes
@@ -25,15 +24,15 @@
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
 
-    - name: Configuring DNS
-      tags: dns
-      cloudflare_dns:
-        zone: lowbit.com.br
-        record: meetup-test
-        type: A
-        value: "{{ gce_instance_info.instance_data.0.public_ip }}"
-        account_email: "{{ cloudflare_email }}"
-        account_api_token: "{{ cloudflare_api }}"
+    # - name: Configuring DNS
+    #   tags: dns
+    #   cloudflare_dns:
+    #     zone: lowbit.com.br
+    #     record: meetup-test
+    #     type: A
+    #     value: "{{ gce_instance_info.instance_data.0.public_ip }}"
+    #     account_email: "{{ cloudflare_email }}"
+    #     account_api_token: "{{ cloudflare_api }}"
 
     - name: Saving Instance to Inventory
       add_host:
@@ -51,25 +50,25 @@
         state: started
         timeout: 30
 
-- name: Configure Hosts
-  hosts: "meetup-{{ meetup_env }}"
-  become: yes
-  roles:
-    - role: system-timezone
-    - role: docker-install
-      docker_version: 18.06
-      docker_storage_driver: overlay
-      docker_registry_use: false
-      docker_log_max_file: 5
-      docker_log_max_size: 50m
-      docker_user_home: /home/docker
-      docker_user_pass: D0ck3r_Us3r_P4ssw0rd
-      proxy_use: false
-  post_tasks:
-    - name: Deploy Meetup Application
-      docker_container:
-        name: meetup-app
-        image: "lowbit/meetup-app:{{ meetup_version }}"
-        state: started
-        ports:
-         - "80:3000"
+# - name: Configure Hosts
+#   hosts: "meetup-{{ meetup_env }}"
+#   become: yes
+#   roles:
+#     - role: system-timezone
+#     - role: docker-install
+#       docker_version: 18.06
+#       docker_storage_driver: overlay
+#       docker_registry_use: false
+#       docker_log_max_file: 5
+#       docker_log_max_size: 50m
+#       docker_user_home: /home/docker
+#       docker_user_pass: D0ck3r_Us3r_P4ssw0rd
+#       proxy_use: false
+#   post_tasks:
+#     - name: Deploy Meetup Application
+#       docker_container:
+#         name: meetup-app
+#         image: "lowbit/meetup-app:{{ meetup_version }}"
+#         state: started
+#         ports:
+#          - "80:3000"

@@ -1,0 +1,25 @@
+---
+- name: Google Cloud Platform
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Creating Instance
+      gce:
+        credentials_file: "gcp_key.json"
+        disk_auto_delete: yes
+        disk_size: 10
+        external_ip: ephemeral
+        image: centos-7
+        machine_type: n1-standard-1
+        name: "meetup-{{ meetup_env }}"
+        network: default
+        num_instances: 1
+        project_id: united-strategy-231002
+        service_account_email: shippable@united-strategy-231002.iam.gserviceaccount.com
+        state: absent
+        tags:
+          - http-server
+          - "{{ meetup_env }}"
+        zone: us-central1-a
+        metadata: '{"enable-oslogin":"TRUE"}'
+      register: gce_instance_info
