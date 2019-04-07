@@ -24,7 +24,7 @@ resources:
     type: dockerOptions
     versionTemplate:
       portMappings:
-        - 80:3000
+        - 30001:3000
 
   - name: cd_docker_platform_params
     type: params
