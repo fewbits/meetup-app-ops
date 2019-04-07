@@ -35,6 +35,8 @@ jobs:
         switch: off
       - IN: cloudflare
         switch: off
+      - IN: lowbit_key
+        switch: off
       - TASK:
           name: deploy_test
           runtime:
