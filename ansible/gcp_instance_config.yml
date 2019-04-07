@@ -1,0 +1,34 @@
+- name: Inventory
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Adding Google Cloud instance to the inventory
+      add_host:
+        name: "meetup_{{ meetup_env }}"
+        ansible_host: "{{ meetup_vm_ip }}"
+        ansible_user: lowbit_lowbit_com_br
+        ansible_ssh_private_key_file: "{{ instance_key }}"
+        group: meetup
+
+- name: Configure Hosts
+  hosts: "meetup-{{ meetup_env }}"
+  become: yes
+  roles:
+    - role: system-timezone
+    - role: docker-install
+      docker_version: 18.06
+      docker_storage_driver: overlay
+      docker_registry_use: false
+      docker_log_max_file: 5
+      docker_log_max_size: 50m
+      docker_user_home: /home/docker
+      docker_user_pass: D0ck3r_Us3r_P4ssw0rd
+      proxy_use: false
+  # post_tasks:
+  #   - name: Deploy Meetup Application
+  #     docker_container:
+  #       name: meetup-app
+  #       image: "lowbit/meetup-app:{{ meetup_version }}"
+  #       state: started
+  #       ports:
+  #        - "80:3000"

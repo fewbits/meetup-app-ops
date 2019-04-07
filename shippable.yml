@@ -45,12 +45,6 @@ jobs:
       # Vou usar a integração com o Google Cloud
       - IN: google_cloud
         switch: off
-      # Vou usar minha chave SSH
-      - IN: lowbit_key
-        switch: off
-      # Também preciso saber que versão do app estamos usando
-      - IN: docker_image
-        switch: on
       # Agora é a tarefa...
       - TASK:
           name: vm_test_create
@@ -67,107 +61,32 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
-            - shipctl post_resource_state_multi "resource_name" "key1=value1 key2=value2"
+            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env}"
       - OUT: vm_test
         overwrite: true
 
-# resources:
-#   - name: google_credentials
-#     type: cliConfig
-#     integration: google-cloud
-#     versionTemplate:
-#       region: us-east1
-
-#   - name: google_cluster
-#     type: cluster
-#     integration: google-cloud
-#     versionTemplate:
-#       sourceName: tbd
-#       region: us-east1-d
-
-#   - name: docker_options
-#     type: dockerOptions
-#     versionTemplate:
-#       portMappings:
-#         - 80:3000
-
-#   - name: docker_parameters
-#     type: params
-#     versionTemplate:
-#       params:
-#         ENVIRONMENT: test
-
-#   - name: lb
-#     type: loadBalancer
-#     integration: google-cloud
-#     pointer:
-#       sourceName: load_balancer
-#       method: LoadBalancer
-#       namespace: shippable
-#       clusterName: meetup
-#       region: us-east1-d
-#     version:
-#       ports:
-#         - name: http
-#           protocol: TCP
-#           port: 80
-#       selector:
-#         name: manifest_create
-#         jobName: deploy
-
-# jobs:
-#   - name: google_cluster_create
-#     type: runSh
-#     steps:
-#       - IN: manifest_create
-#       - IN: google_credentials
-#         switch: on
-#       - TASK:
-#           name: create_cluster
-#           runtime:
-#             options:
-#               env:
-#                 - cluster_name: meetup
-#                 - cluster_zone: us-east1-d
-#                 - machine_type: n1-standard-1
-#                 - machine_count: 3
-#                 - volume_size: 30
-#           script:
-#             - |
-#                 # check if the cluster already exists on GKE
-#                 response=$(gcloud container clusters describe $cluster_name --zone $cluster_zone || echo "ClusterNotFound")
-#                 if [[ $response = "ClusterNotFound" ]]
-#                   then
-#                     echo "cluster not found, creating cluster"
-#                     gcloud container clusters create $cluster_name --num-nodes=$machine_count --machine-type=$machine_type --disk-size=$volume_size --zone=$cluster_zone
-#                   else
-#                     echo "cluster already exists, skipping creating cluster"
-#                 fi
-#       - OUT: google_cluster
-#         overwrite: true
-#     on_success:
-#       script:
-#         - shipctl put_resource_state_multi google_cluster "versionName=$cluster_name" "sourceName=$cluster_name" "region=$cluster_zone"
-
-#   - name: lb_create
-#     type: provision
-#     steps:
-#       - IN: lb
-#       - IN: google_cluster
-
-#   - name: manifest_create
-#     type: manifest
-#     steps:
-#      - IN: meetup-assembly-lines_img_dh
-#      - IN: docker_options
-#      - IN: docker_parameters
-
-#   - name: deploy
-#     type: deploy
-#     steps:
-#       - IN: google_cluster_create
-#       - IN: manifest_create
-#       - IN: google_cluster
-#       - TASK: managed
-#         deployMethod: replace
+  # Configurar VM de Teste
+  - name: vm_test_config
+    type: runSh
+    steps:
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: on
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Vou usar a VM de teste (ela inclusive é um gatilho para esta atividade!)
+      - IN: vm_test
+        switch: on
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_test_config
+          runtime:
+            options:
+              env:
+                - meetup_env: test
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Chamo a automação
+            - ansible-playbook gcp_instance_config.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
