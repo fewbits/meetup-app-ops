@@ -115,7 +115,7 @@ jobs:
         switch: on
       # Também precisamos da versão do app de deploy
       - IN: docker_image
-        switch: off
+        switch: on
       # Agora é a tarefa...
       - TASK:
           name: vm_test_deploy
