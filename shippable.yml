@@ -20,11 +20,17 @@ resources:
     type: integration
     integration: lowbit-key
 
-  # - name: vm
-  #   type: params
-  #   versionTemplate:
-  #     params:
-  #       SEED: initial_version
+  # Este recurso representa nossa instância de Teste
+  - name: vm_test
+    type: params
+    versionTemplate:
+      external_ip: 0.0.0.0
+
+  # Este recurso representa nossa instância de Produção
+  - name: vm_prod
+    type: params
+    versionTemplate:
+      external_ip: 0.0.0.0
 
 jobs:
   # Criar VM de Teste
@@ -60,8 +66,9 @@ jobs:
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
-      # - OUT: vm
-      #   overwrite: true
+            - shipctl post_resource_state_multi "resource_name" "key1=value1 key2=value2"
+      - OUT: vm_test
+        overwrite: true
 
 # resources:
 #   - name: google_credentials
