@@ -130,6 +130,9 @@ jobs:
   - name: vm_prod_create
     type: runSh
     steps:
+      # Esta atividade depende de Testes de Performance bem sucedidos
+      - IN: performance_test
+        switch: off
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
