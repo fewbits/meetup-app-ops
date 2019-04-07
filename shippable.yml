@@ -190,8 +190,8 @@ jobs:
     type: runSh
     steps:
       # O gatilho é um teste de performance bem sucedido
-      - IN: performance_test
-        switch: on
+      # - IN: performance_test
+      #   switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
@@ -203,7 +203,7 @@ jobs:
         switch: off
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_prod_config
-        switch: on
+        switch: off
       # Também precisamos da versão do app de deploy
       - IN: docker_image
         switch: off
