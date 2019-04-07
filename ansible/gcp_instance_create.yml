@@ -33,4 +33,4 @@
         timeout: 90
 
     - name: Updating the external_ip of this instance in Shippable Resource
-      shell: shipctl post_resource_state_multi "vm_test" "external_ip={{ gce_instance_info.instance_data.0.public_ip }}"
+      shell: shipctl post_resource_state_multi "vm_{{ meetup_env }}" "external_ip={{ gce_instance_info.instance_data.0.public_ip }}"

@@ -165,7 +165,7 @@ jobs:
     steps:
       # Vou usar este repositório
       - IN: meetup-app-ops
-        switch: on
+        switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
