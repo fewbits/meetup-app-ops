@@ -106,6 +106,7 @@ jobs:
         switch: off
       # Precisamos do IP da instância
       - IN: vm_test
+        switch: off
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
@@ -119,6 +120,97 @@ jobs:
             options:
               env:
                 - meetup_env: test
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Chamo a automação
+            - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Criar VM de Produção
+  - name: vm_prod_create
+    type: runSh
+    steps:
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: off
+      # Vou usar a integração com o Google Cloud
+      - IN: google_cloud
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_test_create
+          runtime:
+            options:
+              env:
+                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
+                - meetup_env: prod
+          script:
+            # Instalo dependências
+            - pip install apache-libcloud backports.ssl_match_hostname
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Solicito informações de autenticação com a Google Cloud
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            # Chamo a automação
+            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env}"
+      - OUT: vm_prod
+        overwrite: true
+
+  # Configurar VM de Produção
+  - name: vm_prod_config
+    type: runSh
+    steps:
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: on
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Vou usar a VM de Produção (ela inclusive é um gatilho para esta atividade!)
+      - IN: vm_prod
+        switch: on
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_prod_config
+          runtime:
+            options:
+              env:
+                - meetup_env: prod
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
+            # Chamo a automação
+            - ansible-playbook gcp_instance_config.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Deploy em Produção
+  - name: vm_prod_deploy
+    type: runSh
+    steps:
+      # O gatilho é um teste de performance bem sucedido
+      - IN: performance_test
+        switch: on
+      # Vou usar este repositório
+      - IN: meetup-app-ops
+        switch: off
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Precisamos do IP da instância
+      - IN: vm_prod
+        switch: off
+      # Para fazer o deploy, preciso do ambiente configurado
+      - IN: vm_prod_config
+        switch: on
+      # Também precisamos da versão do app de deploy
+      - IN: docker_image
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_prod_deploy
+          runtime:
+            options:
+              env:
+                - meetup_env: prod
           script:
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
