@@ -97,6 +97,7 @@ jobs:
   # Deploy em Teste
   - name: vm_test_deploy
     type: runSh
+    dependencyMode: strict
     steps:
       # Vou usar este repositório
       - IN: meetup-app-ops
@@ -191,6 +192,7 @@ jobs:
   # Deploy em Produção
   - name: vm_prod_deploy
     type: runSh
+    dependencyMode: strict
     steps:
       # O gatilho é um teste de performance bem sucedido
       - IN: performance_test
