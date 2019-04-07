@@ -109,9 +109,9 @@ jobs:
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
-      # Também precisamos da versão do app de deploy, que também é um gatilho
+      # Também precisamos da versão do app de deploy
       - IN: docker_image
-        switch: on
+        switch: off
       # Agora é a tarefa...
       - TASK:
           name: vm_test_deploy
