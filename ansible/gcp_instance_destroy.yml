@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   tasks:
-    - name: Creating Instance
+    - name: Destroying Instance
       gce:
         credentials_file: "gcp_key.json"
         disk_auto_delete: yes
