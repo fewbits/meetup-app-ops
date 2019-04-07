@@ -20,14 +20,6 @@ resources:
       isPull: false
       versionName: "master.6"
 
-  # - name: cd_docker_platform_cluster
-  #   type: cluster
-  #   integration: "google-cloud"
-  #   versionTemplate:
-  #     sourceName : "test-cluster"
-  #     region: "us-east1-d"
-  #     namespace: "shippable"
-
   - name: cd_docker_platform_options
     type: dockerOptions
     versionTemplate:
@@ -39,6 +31,24 @@ resources:
     versionTemplate:
       params:
         ENVIRONMENT: "test"
+
+  - name: app_lb
+    type: loadBalancer
+    integration: google-cloud
+    pointer:
+      sourceName: "apploadbalancer"
+      method: LoadBalancer
+      namespace: shippable
+      clusterName: "test-cluster"
+      region: "us-east1-b"
+    version:
+      ports:
+        - name: testport
+          protocol: TCP
+          port: 80
+      selector:
+        name: "cd_docker_platform_manifest"
+        jobName: "cd_docker_platform_deploy"
 
 
 jobs:
@@ -74,6 +84,12 @@ jobs:
     on_success:
       script:
         - shipctl put_resource_state_multi gcp_gke_cluster "versionName=$cluster_name" "sourceName=$cluster_name" "region=$cluster_zone"
+
+  - name: app_provision
+    type: provision
+    steps:
+      - IN: app_lb
+      - IN: gcp_gke_cluster
 
   - name: cd_docker_platform_manifest
     type: manifest
