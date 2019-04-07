@@ -4,7 +4,7 @@
   tasks:
     - name: Adding Google Cloud instance to the inventory
       add_host:
-        name: "meetup_{{ meetup_env }}"
+        name: "meetup-{{ meetup_env }}"
         ansible_host: "{{ meetup_vm_ip }}"
         ansible_user: lowbit_lowbit_com_br
         ansible_ssh_private_key_file: "{{ instance_key }}"
