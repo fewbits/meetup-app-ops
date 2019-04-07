@@ -1,11 +1,11 @@
 ---
 resources:
-  # - name: gcp_gce_repo
-  #   type: gitRepo
-  #   integration: "drship_github"
-  #   versionTemplate:
-  #     sourceName: "devops-recipes/prov_gcp_gce_ansible"
-  #     branch: master
+  - name: meetup-app-ops
+    type: gitRepo
+    integration: github
+    versionTemplate:
+      sourceName: fewbits/meetup-app-ops
+      branch: master
 
   - name: google_cloud
     type: integration
@@ -21,8 +21,8 @@ jobs:
   - name: vm_create
     type: runSh
     steps:
-      # - IN: gcp_gce_repo
-      #   switch: off
+      - IN: meetup-app-ops
+        switch: on
       - IN: google_cloud
         switch: off
       - TASK:
@@ -43,8 +43,7 @@ jobs:
                 - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
           script:
             - pip install apache-libcloud backports.ssl_match_hostname
-            - cd ansible
-            # - pushd $(shipctl get_resource_state "gcp_gce_repo")/ansible
+            - pushd $(shipctl get_resource_state "meetup-app-ops")/ansible
             - echo $(shipctl get_integration_resource_field google_credentials JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             - shipctl replace variables.yml inventory/gce.ini
             - ansible-playbook -v gce_prov_playbook.yml
