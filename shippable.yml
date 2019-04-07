@@ -15,6 +15,10 @@ resources:
     type: integration
     integration: cloudflare
 
+  - name: lowbit_key
+    type: integration
+    integration: lowbit-key
+
   # - name: vm
   #   type: params
   #   versionTemplate:
