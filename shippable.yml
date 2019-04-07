@@ -9,7 +9,7 @@ resources:
 
   - name: google_cloud
     type: integration
-    integration: google_cloud
+    integration: google-cloud
 
   - name: vm
     type: params
