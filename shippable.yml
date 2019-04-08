@@ -74,12 +74,12 @@ jobs:
     type: runSh
     dependencyMode: strict
     steps:
-      # A imagem docker é um gatilho
-      - IN: docker_image
+      # O gatilho é a criação da VM de Testes
+      - IN: vm_test_create
         switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
-        switch: on
+        switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
@@ -104,9 +104,6 @@ jobs:
     type: runSh
     dependencyMode: strict
     steps:
-      # Só podemos fazer deploy se a VM estiver criada
-      - IN: vm_test_create
-        switch: on
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
@@ -115,7 +112,7 @@ jobs:
         switch: on
       # Por último, precisamos da versão do app de deploy
       - IN: docker_image
-        switch: on
+        switch: off
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
