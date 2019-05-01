@@ -24,11 +24,3 @@
       docker_user_home: /home/docker
       docker_user_pass: D0ck3r_Us3r_P4ssw0rd
       proxy_use: false
-  # post_tasks:
-  #   - name: Deploy Meetup Application
-  #     docker_container:
-  #       name: meetup-app
-  #       image: "lowbit/meetup-app:{{ meetup_version }}"
-  #       state: started
-  #       ports:
-  #        - "80:3000"

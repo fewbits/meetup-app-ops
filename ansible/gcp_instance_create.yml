@@ -9,7 +9,7 @@
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral
-        image: centos-7
+        image: "{{ os_image_version }}"
         machine_type: n1-standard-1
         name: "meetup-{{ meetup_env }}"
         network: default

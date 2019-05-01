@@ -43,6 +43,9 @@ jobs:
       # A imagem docker é um gatilho para esta atividade
       - IN: docker_image
         switch: on
+      # A imagem base de Sistema Operacional também é um gatilho
+      - IN: os_image_version
+        switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: on
@@ -65,7 +68,7 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env}"
+            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       - OUT: vm_test
         overwrite: true
 
