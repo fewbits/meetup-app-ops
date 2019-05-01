@@ -43,12 +43,12 @@ jobs:
       # A imagem docker é um gatilho para esta atividade
       - IN: docker_image
         switch: on
-      # A imagem base de Sistema Operacional também é um gatilho
+      # A imagem base do Sistema Operacional também é um gatilho
       - IN: os_image_version
         switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
-        switch: on
+        switch: off
       # Vou usar a integração com o Google Cloud
       - IN: google_cloud
         switch: off
@@ -70,13 +70,14 @@ jobs:
             # Chamo a automação
             # - env
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
+      # A saída deste job é o ambiente de Teste
       - OUT: vm_test
         overwrite: true
 
   # Configurar VM de Teste
   - name: vm_test_config
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
       # O gatilho é a criação da VM de Testes
       - IN: vm_test_create
@@ -106,15 +107,15 @@ jobs:
   # Deploy em Teste
   - name: vm_test_deploy
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_test_config
         switch: on
-      # E preciso do DNS configurado
-      - IN: dns_test
-        switch: on
-      # Por último, precisamos da versão do app de deploy
+      # Preciso do IP da instância
+      - IN: vm_test
+        switch: off
+      # Preciso da versão do app
       - IN: docker_image
         switch: off
       # Vou usar este repositório
@@ -122,9 +123,6 @@ jobs:
         switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
-        switch: off
-      # Precisamos do IP da instância
-      - IN: vm_test
         switch: off
       # Agora é a tarefa...
       - TASK:
@@ -169,13 +167,14 @@ jobs:
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env}"
+      # A saída é o ambiente de Produção
       - OUT: vm_prod
         overwrite: true
 
   # Configurar VM de Produção
   - name: vm_prod_config
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
       # Vou usar este repositório
       - IN: meetup-app-ops
@@ -202,27 +201,27 @@ jobs:
   # Deploy em Produção
   - name: vm_prod_deploy
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
-      # O gatilho é um teste de performance bem sucedido
-      - IN: performance_test
+      # O gatilho é o ambiente configurado
+      - IN: vm_prod_config
         switch: on
+      # O gatilho é um teste de performance bem sucedido
+      # - IN: performance_test
+      #   switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
-      # Precisamos do IP da instância
+      # Preciso do IP do ambiente de Produção
       - IN: vm_prod
         switch: off
-      # Para fazer o deploy, preciso do ambiente configurado
-      - IN: vm_prod_config
-        switch: on
       # Preciso do DNS de Produção configurado
-      - IN: dns_prod
-        switch: on
-      # Também precisamos da versão do app de deploy
+      # - IN: dns_prod
+      #   switch: on
+      # Preciso da versão do app
       - IN: docker_image
         switch: off
       # Agora é a tarefa...
@@ -241,9 +240,9 @@ jobs:
   # Deleta a VM de Testes
   - name: vm_test_destroy
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
-      # O gatilho para esta atividade é um Teste de Performance bem sucedido
+      # O gatilho para esta atividade é um Deploy em Produção
       - IN: vm_prod_deploy
         switch: on
       # Vou usar este repositório
