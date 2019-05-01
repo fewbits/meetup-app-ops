@@ -68,7 +68,6 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            # - env
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       # A saída deste job é o ambiente de Teste
       - OUT: vm_test
@@ -143,6 +142,9 @@ jobs:
       # Esta atividade depende de Testes de Performance bem sucedidos
       - IN: performance_test
         switch: on
+      # Vou usar a imagem base do Sistema Operacional
+      - IN: os_image_version
+        switch: off
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
@@ -165,7 +167,7 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env}"
+            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       # A saída é o ambiente de Produção
       - OUT: vm_prod
         overwrite: true
