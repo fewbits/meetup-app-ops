@@ -38,7 +38,7 @@ jobs:
   # Criar VM de Teste
   - name: vm_test_create
     type: runSh
-    dependencyMode: strict
+    # dependencyMode: strict
     steps:
       # A imagem docker é um gatilho para esta atividade
       - IN: docker_image
@@ -68,7 +68,8 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
+            - env
+            # - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       - OUT: vm_test
         overwrite: true
 
