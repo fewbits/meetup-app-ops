@@ -77,11 +77,10 @@ jobs:
   # Configurar VM de Teste
   - name: vm_test_config
     type: runSh
+    priority: 200
     # dependencyMode: strict
     steps:
       # O gatilho é a criação da VM de Testes
-      - IN: vm_test_create
-        switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
@@ -90,7 +89,7 @@ jobs:
         switch: off
       # Vou usar a VM de teste
       - IN: vm_test
-        switch: off
+        switch: on
       # Agora é a tarefa...
       - TASK:
           name: vm_test_config
@@ -174,6 +173,7 @@ jobs:
   # Configurar VM de Produção
   - name: vm_prod_config
     type: runSh
+    priority: 200
     # dependencyMode: strict
     steps:
       # Vou usar este repositório
