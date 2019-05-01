@@ -180,15 +180,18 @@ jobs:
     priority: 200
     # dependencyMode: strict
     steps:
+      # O gatilho é a criação da instância de Produção
+      - IN: vm_prod_create
+        switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
-      # Vou usar a VM de Produção (ela inclusive é um gatilho para esta atividade!)
+      # Vou usar a VM de Produção
       - IN: vm_prod
-        switch: on
+        switch: off
       # Agora é a tarefa...
       - TASK:
           name: vm_prod_config
