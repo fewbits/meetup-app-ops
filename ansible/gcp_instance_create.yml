@@ -23,6 +23,10 @@
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
+    
+    - name: Debug
+      debug:
+        var: gce_instance_info
 
     - name: Waiting for instance to become active (SSH)
       wait_for:
