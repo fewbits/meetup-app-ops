@@ -80,6 +80,8 @@ jobs:
     # dependencyMode: strict
     steps:
       # O gatilho é a criação da VM de Testes
+      - IN: vm_test_create
+        switch: on
       # Vou usar este repositório
       - IN: meetup-app-ops
         switch: off
@@ -88,7 +90,7 @@ jobs:
         switch: off
       # Vou usar a VM de teste
       - IN: vm_test
-        switch: on
+        switch: off
       # Agora é a tarefa...
       - TASK:
           name: vm_test_config
