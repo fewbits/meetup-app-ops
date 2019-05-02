@@ -23,3 +23,5 @@
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
+      async: 3600
+      poll: 0
