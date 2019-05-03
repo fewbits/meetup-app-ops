@@ -10,14 +10,14 @@
         ansible_ssh_private_key_file: "{{ instance_key }}"
         group: qconsp
 
-- name: Configure Hosts
+- name: Deploy
   hosts: "qconsp-{{ service_name }}-{{ service_env }}"
   become: yes
   tasks:
     - name: Deploying QConSP Service
       docker_container:
         name: "qconsp-{{ service_name }}"
-        image: "lowbit/{{ service_name }}:{{ service_version }}"
+        image: "lowbit/qconsp-{{ service_name }}:{{ service_version }}"
         state: started
         ports:
          - "80:{{ service_internal_port }}"
