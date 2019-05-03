@@ -2,6 +2,8 @@
 - name: Google Cloud Platform
   hosts: localhost
   connection: local
+  vars:
+    official_image: "official-image-{{ os_image }}"
   tasks:
     - name: Creating Instance
       gce:
@@ -41,7 +43,7 @@
           - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
-      when: gce_instance_info.instance_data.0.image != "official-image-{{ os_image }}"
+      when: gce_instance_info.instance_data.0.image != official_image
 
     - name: Creating Instance again (if wrong image was being used)
       gce:
@@ -62,7 +64,7 @@
           - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
-      when: gce_instance_info.instance_data.0.image != "official-image-{{ os_image }}"
+      when: gce_instance_info.instance_data.0.image != official_image
       register: gce_instance_info
 
     - name: Waiting for instance to become active (SSH)
