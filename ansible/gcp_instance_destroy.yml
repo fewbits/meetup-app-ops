@@ -21,8 +21,6 @@
           - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
-      register: gce_instance_info
-
-    - name: Debug
-      debug:
-        var: gce_instance_info
+      register: gce_instance_destroy
+      retries: 10
+      until: gce_instance_destroy.state == "absent"

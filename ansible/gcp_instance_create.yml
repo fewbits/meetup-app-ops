@@ -43,7 +43,11 @@
           - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
+      register: gce_instance_destroy
       when: gce_instance_info.instance_data.0.image != official_image
+      retries: 10
+      until: gce_instance_destroy.state == "absent"
+
 
     - name: Creating Instance again (just in case of wrong image was being used)
       gce:
