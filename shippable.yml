@@ -261,6 +261,9 @@ jobs:
       # Para fazer o deploy, preciso do ambiente configurado
       - IN: vm_app_test_config
         switch: on
+      # O job de DNS precisa estar em um estado saudável
+      - IN: dns_app_test
+        switch: off
       # Preciso do IP da instância
       - IN: vm_app_test_ip
         switch: off
@@ -302,6 +305,9 @@ jobs:
       # Vou usar minha chave SSH
       - IN: lowbit_key
         switch: off
+      # O job de DNS precisa estar em um estado saudável
+      - IN: dns_app_prod
+        switch: off
       # Preciso do IP do ambiente de Produção
       - IN: vm_app_prod_ip
         switch: off
@@ -336,6 +342,9 @@ jobs:
         switch: off
       # Vou usar minha chave SSH
       - IN: lowbit_key
+        switch: off
+      # O job de DNS precisa estar em um estado saudável
+      - IN: dns_site_prod
         switch: off
       # Preciso do IP do ambiente de Produção
       - IN: vm_site_prod_ip
