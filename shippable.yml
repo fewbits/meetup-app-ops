@@ -21,14 +21,21 @@ resources:
     integration: lowbit-key
 
   # Este recurso representa nossa instância de Teste
-  - name: vm_test
+  - name: vm_test_ip
     type: params
     versionTemplate:
       params:
         external_ip: "0.0.0.0"
 
   # Este recurso representa nossa instância de Produção
-  - name: vm_prod
+  - name: vm_prod_ip
+    type: params
+    versionTemplate:
+      params:
+        external_ip: "0.0.0.0"
+
+  # Este recurso representa nossa instância do Site
+  - name: vm_site_ip
     type: params
     versionTemplate:
       params:
@@ -41,7 +48,7 @@ jobs:
     # dependencyMode: strict
     steps:
       # A imagem docker é um gatilho para esta atividade
-      - IN: docker_image
+      - IN: docker_image_app
         switch: on
       # A imagem base do Sistema Operacional também é um gatilho
       - IN: os_image_version
@@ -70,7 +77,7 @@ jobs:
             # Chamo a automação
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       # A saída deste job é o ambiente de Teste
-      - OUT: vm_test
+      - OUT: vm_test_ip
         overwrite: true
 
   # Configurar VM de Teste
@@ -89,7 +96,7 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Vou usar a VM de teste
-      - IN: vm_test
+      - IN: vm_test_ip
         switch: off
       # Agora é a tarefa...
       - TASK:
@@ -113,7 +120,7 @@ jobs:
       - IN: vm_test_config
         switch: on
       # Preciso do IP da instância
-      - IN: vm_test
+      - IN: vm_test_ip
         switch: off
       # Preciso da versão do app
       - IN: docker_image
@@ -171,7 +178,7 @@ jobs:
             # Chamo a automação
             - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
       # A saída é o ambiente de Produção
-      - OUT: vm_prod
+      - OUT: vm_prod_ip
         overwrite: true
 
   # Configurar VM de Produção
@@ -190,7 +197,7 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Vou usar a VM de Produção
-      - IN: vm_prod
+      - IN: vm_prod_ip
         switch: off
       # Agora é a tarefa...
       - TASK:
@@ -223,11 +230,8 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Preciso do IP do ambiente de Produção
-      - IN: vm_prod
+      - IN: vm_prod_ip
         switch: off
-      # Preciso do DNS de Produção configurado
-      # - IN: dns_prod
-      #   switch: on
       # Preciso da versão do app
       - IN: docker_image
         switch: off
@@ -243,6 +247,43 @@ jobs:
             - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
             # Chamo a automação
             - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Criar VM do Site
+  - name: vm_site_create
+    type: runSh
+    steps:
+      # O gatilho é uma nova release do site
+      - IN: docker_image_site
+        switch: on
+      # Outro gatilho é a imagem base do Sistema Operacional
+      - IN: os_image_version
+        switch: on
+      # Vou usar este repositório
+      - IN: qconsp-ops
+        switch: off
+      # Vou usar a integração com o Google Cloud
+      - IN: google_cloud
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_site_create
+          runtime:
+            options:
+              env:
+                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
+                - meetup_env: site
+          script:
+            # Instalo dependências
+            - pip install apache-libcloud backports.ssl_match_hostname
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
+            # Solicito informações de autenticação com a Google Cloud
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            # Chamo a automação
+            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
+      # A saída é a instância do Site
+      - OUT: vm_site_ip
+        overwrite: true
 
   # Deleta a VM de Testes
   - name: vm_test_destroy
