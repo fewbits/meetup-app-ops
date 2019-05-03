@@ -9,7 +9,6 @@
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral
-        image: "official-image-{{ os_image }}"
         machine_type: n1-standard-1
         name: "qconsp-{{ service_name }}-{{ service_env }}"
         network: default
