@@ -23,6 +23,6 @@
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
 
-  - name: Debug
-    debug:
-      var: gce_instance_info
+    - name: Debug
+      debug:
+        var: gce_instance_info
