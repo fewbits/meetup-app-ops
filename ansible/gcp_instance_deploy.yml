@@ -18,6 +18,7 @@
       docker_container:
         name: "qconsp-{{ service_name }}"
         image: "lowbit/qconsp-{{ service_name }}:{{ service_version }}"
-        state: started
         ports:
          - "80:{{ service_internal_port }}"
+        state: started
+        restart_policy: always
