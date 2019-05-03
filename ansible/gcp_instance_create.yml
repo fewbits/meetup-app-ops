@@ -11,7 +11,7 @@
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral
-        image: "official-image-{{ os_image }}"
+        image: "{{ official_image }}"
         machine_type: n1-standard-1
         name: "qconsp-{{ service_name }}-{{ service_env }}"
         network: default
@@ -45,13 +45,13 @@
         metadata: '{"enable-oslogin":"TRUE"}'
       when: gce_instance_info.instance_data.0.image != official_image
 
-    - name: Creating Instance again (if wrong image was being used)
+    - name: Creating Instance again (just in case of wrong image was being used)
       gce:
         credentials_file: "gcp_key.json"
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral
-        image: "official-image-{{ os_image }}"
+        image: "{{ official_image }}"
         machine_type: n1-standard-1
         name: "qconsp-{{ service_name }}-{{ service_env }}"
         network: default
@@ -64,7 +64,6 @@
           - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
-      when: gce_instance_info.instance_data.0.image != official_image
       register: gce_instance_info
 
     - name: Waiting for instance to become active (SSH)
