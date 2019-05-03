@@ -24,9 +24,46 @@
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
     
-    - name: Debug
-      debug:
-        var: gce_instance_info
+    - name: Destroying Instance (if wrong image is being used)
+      gce:
+        credentials_file: "gcp_key.json"
+        disk_auto_delete: yes
+        external_ip: ephemeral
+        machine_type: n1-standard-1
+        name: "qconsp-{{ service_name }}-{{ service_env }}"
+        network: default
+        num_instances: 1
+        project_id: united-strategy-231002
+        service_account_email: shippable@united-strategy-231002.iam.gserviceaccount.com
+        state: absent
+        tags:
+          - http-server
+          - "{{ service_env }}"
+        zone: us-central1-a
+        metadata: '{"enable-oslogin":"TRUE"}'
+      when: gce_instance_info.instance_data.0.image != "official-image-{{ os_image }}"
+
+    - name: Creating Instance again (if wrong image was being used)
+      gce:
+        credentials_file: "gcp_key.json"
+        disk_auto_delete: yes
+        disk_size: 10
+        external_ip: ephemeral
+        image: "official-image-{{ os_image }}"
+        machine_type: n1-standard-1
+        name: "qconsp-{{ service_name }}-{{ service_env }}"
+        network: default
+        num_instances: 1
+        project_id: united-strategy-231002
+        service_account_email: shippable@united-strategy-231002.iam.gserviceaccount.com
+        state: present
+        tags:
+          - http-server
+          - "{{ service_env }}"
+        zone: us-central1-a
+        metadata: '{"enable-oslogin":"TRUE"}'
+      when: gce_instance_info.instance_data.0.image != "official-image-{{ os_image }}"
+      register: gce_instance_info
 
     - name: Waiting for instance to become active (SSH)
       wait_for:
