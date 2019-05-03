@@ -9,9 +9,9 @@
         disk_auto_delete: yes
         disk_size: 10
         external_ip: ephemeral
-        image: "official-image-{{ os_image_version }}"
+        image: "official-image-{{ os_image }}"
         machine_type: n1-standard-1
-        name: "meetup-{{ meetup_env }}"
+        name: "qconsp-{{ service_name }}-{{ service_env }}"
         network: default
         num_instances: 1
         project_id: united-strategy-231002
@@ -19,7 +19,7 @@
         state: present
         tags:
           - http-server
-          - "{{ meetup_env }}"
+          - "{{ service_env }}"
         zone: us-central1-a
         metadata: '{"enable-oslogin":"TRUE"}'
       register: gce_instance_info
@@ -37,4 +37,4 @@
         timeout: 90
 
     - name: Updating the external_ip of this instance in Shippable Resource
-      shell: shipctl post_resource_state_multi "vm_{{ meetup_env }}_ip" "external_ip={{ gce_instance_info.instance_data.0.public_ip }}"
+      shell: shipctl post_resource_state_multi "vm_{{ service_env }}_ip" "external_ip={{ gce_instance_info.instance_data.0.public_ip }}"

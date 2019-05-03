@@ -4,20 +4,20 @@
   tasks:
     - name: Adding Google Cloud instance to the inventory
       add_host:
-        name: "meetup-{{ meetup_env }}"
-        ansible_host: "{{ meetup_vm_ip }}"
+        name: "qconsp-{{ service_name }}-{{ service_env }}"
+        ansible_host: "{{ vm_ip }}"
         ansible_user: lowbit_lowbit_com_br
         ansible_ssh_private_key_file: "{{ instance_key }}"
-        group: meetup
+        group: qconsp
 
 - name: Configure Hosts
-  hosts: "meetup-{{ meetup_env }}"
+  hosts: "qconsp-{{ service_name }}-{{ service_env }}"
   become: yes
   tasks:
-    - name: Deploy Meetup Application
+    - name: Deploying QConSP Service
       docker_container:
-        name: meetup-app
-        image: "lowbit/meetup-app:{{ meetup_version }}"
+        name: "qconsp-{{ service_name }}"
+        image: "lowbit/{{ service_name }}:{{ service_version }}"
         state: started
         ports:
-         - "80:3000"
+         - "80:{{ service_internal_port }}"

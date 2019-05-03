@@ -20,30 +20,30 @@ resources:
     type: integration
     integration: lowbit-key
 
-  # Este recurso representa nossa instância de Teste
-  - name: vm_test_ip
+  # Este recurso representa nossa instância de Teste da Aplicação
+  - name: vm_app_test_ip
     type: params
     versionTemplate:
       params:
         external_ip: "0.0.0.0"
 
-  # Este recurso representa nossa instância de Produção
-  - name: vm_prod_ip
+  # Este recurso representa nossa instância de Produção da Aplicação
+  - name: vm_app_prod_ip
     type: params
     versionTemplate:
       params:
         external_ip: "0.0.0.0"
 
-  # Este recurso representa nossa instância do Site
-  - name: vm_site_ip
+  # Este recurso representa nossa instância de Produção do Site
+  - name: vm_site_prod_ip
     type: params
     versionTemplate:
       params:
         external_ip: "0.0.0.0"
 
 jobs:
-  # Criar VM de Teste
-  - name: vm_test_create
+  # Criar VM de Teste da Aplicação
+  - name: vm_app_test_create
     type: runSh
     # dependencyMode: strict
     steps:
@@ -51,7 +51,7 @@ jobs:
       - IN: docker_image_app
         switch: on
       # A imagem base do Sistema Operacional também é um gatilho
-      - IN: os_image_version
+      - IN: os_image
         switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
@@ -61,12 +61,13 @@ jobs:
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_test_create
+          name: vm_app_test_create
           runtime:
             options:
               env:
                 - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
-                - meetup_env: test
+                - service_name: app
+                - service_env: test
           script:
             # Instalo dependências
             - pip install apache-libcloud backports.ssl_match_hostname
@@ -75,19 +76,95 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
-      # A saída deste job é o ambiente de Teste
-      - OUT: vm_test_ip
+            - ansible-playbook gcp_instance_create.yml --extra-vars "service_name=${service_name} service_env=${service_env} os_image=${OS_IMAGE_VERSIONNAME}"
+      # A saída deste job é o ambiente de Teste da Aplicação
+      - OUT: vm_app_test_ip
         overwrite: true
 
-  # Configurar VM de Teste
-  - name: vm_test_config
+  # Criar VM de Produção da Aplicação
+  - name: vm_app_prod_create
+    type: runSh
+    steps:
+      # Esta atividade depende de Testes de Performance bem sucedidos
+      - IN: performance_test
+        switch: on
+      # Vou usar a imagem base do Sistema Operacional
+      - IN: os_image
+        switch: off
+      # Vou usar este repositório
+      - IN: qconsp-ops
+        switch: off
+      # Vou usar a integração com o Google Cloud
+      - IN: google_cloud
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_app_prod_create
+          runtime:
+            options:
+              env:
+                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
+                - service_name: app
+                - service_env: prod
+          script:
+            # Instalo dependências
+            - pip install apache-libcloud backports.ssl_match_hostname
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
+            # Solicito informações de autenticação com a Google Cloud
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            # Chamo a automação
+            - ansible-playbook gcp_instance_create.yml --extra-vars "service_name=${service_name} service_env=${service_env} os_image=${OS_IMAGE_VERSIONNAME}"
+      # A saída é o ambiente de Produção da Aplicação
+      - OUT: vm_app_prod_ip
+        overwrite: true
+
+  # Criar VM de Produção do Site
+  - name: vm_site_prod_create
+    type: runSh
+    steps:
+      # O gatilho é uma nova release do site
+      - IN: docker_image_site
+        switch: on
+      # Outro gatilho é a imagem base do Sistema Operacional
+      - IN: os_image
+        switch: on
+      # Vou usar este repositório
+      - IN: qconsp-ops
+        switch: off
+      # Vou usar a integração com o Google Cloud
+      - IN: google_cloud
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_site_prod_create
+          runtime:
+            options:
+              env:
+                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
+                - service_name: site
+                - service_env: prod
+          script:
+            # Instalo dependências
+            - pip install apache-libcloud backports.ssl_match_hostname
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
+            # Solicito informações de autenticação com a Google Cloud
+            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
+            # Chamo a automação
+            - ansible-playbook gcp_instance_create.yml --extra-vars "service_name=${service_name} service_env=${service_env} os_image=${OS_IMAGE_VERSIONNAME}"
+      # A saída é a instância de Produção do Site
+      - OUT: vm_site_prod_ip
+        overwrite: true
+
+  # Configurar VM de Teste da Aplicação
+  - name: vm_app_test_config
     type: runSh
     priority: 200
     # dependencyMode: strict
     steps:
       # O gatilho é a criação da VM de Testes
-      - IN: vm_test_create
+      - IN: vm_app_test_create
         switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
@@ -96,99 +173,30 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Vou usar a VM de teste
-      - IN: vm_test_ip
+      - IN: vm_app_test_ip
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_test_config
+          name: vm_app_test_config
           runtime:
             options:
               env:
-                - meetup_env: test
+                - service_name: app
+                - service_env: test
           script:
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
             # Chamo a automação
-            - ansible-playbook gcp_instance_config.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+            - ansible-playbook gcp_instance_config.yml --extra-vars "service_name=${service_name} service_env=${service_env} vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
 
-  # Deploy em Teste
-  - name: vm_test_deploy
-    type: runSh
-    # dependencyMode: strict
-    steps:
-      # Para fazer o deploy, preciso do ambiente configurado
-      - IN: vm_test_config
-        switch: on
-      # Preciso do IP da instância
-      - IN: vm_test_ip
-        switch: off
-      # Preciso da versão do app
-      - IN: docker_image
-        switch: off
-      # Vou usar este repositório
-      - IN: qconsp-ops
-        switch: off
-      # Vou usar minha chave SSH
-      - IN: lowbit_key
-        switch: off
-      # Agora é a tarefa...
-      - TASK:
-          name: vm_test_deploy
-          runtime:
-            options:
-              env:
-                - meetup_env: test
-          script:
-            # Solicito dados do repositório
-            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
-            # Chamo a automação
-            - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
-
-  # Criar VM de Produção
-  - name: vm_prod_create
-    type: runSh
-    steps:
-      # Esta atividade depende de Testes de Performance bem sucedidos
-      - IN: performance_test
-        switch: on
-      # Vou usar a imagem base do Sistema Operacional
-      - IN: os_image_version
-        switch: off
-      # Vou usar este repositório
-      - IN: qconsp-ops
-        switch: off
-      # Vou usar a integração com o Google Cloud
-      - IN: google_cloud
-        switch: off
-      # Agora é a tarefa...
-      - TASK:
-          name: vm_test_create
-          runtime:
-            options:
-              env:
-                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
-                - meetup_env: prod
-          script:
-            # Instalo dependências
-            - pip install apache-libcloud backports.ssl_match_hostname
-            # Solicito dados do repositório
-            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
-            # Solicito informações de autenticação com a Google Cloud
-            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
-            # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
-      # A saída é o ambiente de Produção
-      - OUT: vm_prod_ip
-        overwrite: true
-
-  # Configurar VM de Produção
-  - name: vm_prod_config
+  # Configurar VM de Produção da Aplicação
+  - name: vm_app_prod_config
     type: runSh
     priority: 200
     # dependencyMode: strict
     steps:
       # O gatilho é a criação da instância de Produção
-      - IN: vm_prod_create
+      - IN: vm_app_prod_create
         switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
@@ -197,32 +205,97 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Vou usar a VM de Produção
-      - IN: vm_prod_ip
+      - IN: vm_app_prod_ip
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_prod_config
+          name: vm_app_prod_config
           runtime:
             options:
               env:
-                - meetup_env: prod
+                - service_name: app
+                - service_env: prod
           script:
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
             # Chamo a automação
-            - ansible-playbook gcp_instance_config.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+            - ansible-playbook gcp_instance_config.yml --extra-vars "service_name=${service_name} service_env=${service_env} vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
 
-  # Deploy em Produção
-  - name: vm_prod_deploy
+  # Configurar VM de Produção do Site
+  - name: vm_site_prod_config
+    type: runSh
+    priority: 200
+    # dependencyMode: strict
+    steps:
+      # O gatilho é a criação da instância de Produção
+      - IN: vm_site_prod_create
+        switch: on
+      # Vou usar este repositório
+      - IN: qconsp-ops
+        switch: off
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Vou usar a VM de Produção
+      - IN: vm_site_prod_ip
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_site_prod_config
+          runtime:
+            options:
+              env:
+                - service_name: site
+                - service_env: prod
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
+            # Chamo a automação
+            - ansible-playbook gcp_instance_config.yml --extra-vars "service_name=${service_name} service_env=${service_env} vm_ip=${external_ip} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Deploy da Aplicação no ambiente de Teste
+  - name: vm_app_test_deploy
+    type: runSh
+    # dependencyMode: strict
+    steps:
+      # Para fazer o deploy, preciso do ambiente configurado
+      - IN: vm_app_test_config
+        switch: on
+      # Preciso do IP da instância
+      - IN: vm_app_test_ip
+        switch: off
+      # Preciso da versão do app
+      - IN: docker_image_app
+        switch: off
+      # Vou usar este repositório
+      - IN: qconsp-ops
+        switch: off
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Agora é a tarefa...
+      - TASK:
+          name: vm_app_test_deploy
+          runtime:
+            options:
+              env:
+                - service_name: app
+                - service_env: test
+                - service_internal_port: 3000
+          script:
+            # Solicito dados do repositório
+            - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
+            # Chamo a automação
+            - ansible-playbook gcp_instance_deploy.yml --extra-vars "service_name=${service_name} service_env=${service_env} service_internal_port=${service_internal_port} vm_ip=${external_ip} service_version=${DOCKER_IMAGE_APP_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+
+  # Deploy da Aplicação no ambiente de Produção
+  - name: vm_app_prod_deploy
     type: runSh
     # dependencyMode: strict
     steps:
       # O gatilho é o ambiente configurado
-      - IN: vm_prod_config
+      - IN: vm_app_prod_config
         switch: on
-      # O gatilho é um teste de performance bem sucedido
-      # - IN: performance_test
-      #   switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
         switch: off
@@ -230,68 +303,68 @@ jobs:
       - IN: lowbit_key
         switch: off
       # Preciso do IP do ambiente de Produção
-      - IN: vm_prod_ip
+      - IN: vm_app_prod_ip
         switch: off
       # Preciso da versão do app
-      - IN: docker_image
+      - IN: docker_image_app
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_prod_deploy
+          name: vm_app_prod_deploy
           runtime:
             options:
               env:
-                - meetup_env: prod
+                - service_name: app
+                - service_env: prod
+                - service_internal_port: 3000
           script:
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
             # Chamo a automação
-            - ansible-playbook gcp_instance_deploy.yml --extra-vars "meetup_env=${meetup_env} meetup_vm_ip=${external_ip} meetup_version=${DOCKER_IMAGE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
+            - ansible-playbook gcp_instance_deploy.yml --extra-vars "service_name=${service_name} service_env=${service_env} service_internal_port=${service_internal_port} vm_ip=${external_ip} service_version=${DOCKER_IMAGE_APP_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
 
-  # Criar VM do Site
-  - name: vm_site_create
+  # Deploy do Site no ambiente de Produção
+  - name: vm_site_prod_deploy
     type: runSh
+    # dependencyMode: strict
     steps:
-      # O gatilho é uma nova release do site
-      - IN: docker_image_site
-        switch: on
-      # Outro gatilho é a imagem base do Sistema Operacional
-      - IN: os_image_version
+      # O gatilho é o ambiente configurado
+      - IN: vm_site_prod_config
         switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
         switch: off
-      # Vou usar a integração com o Google Cloud
-      - IN: google_cloud
+      # Vou usar minha chave SSH
+      - IN: lowbit_key
+        switch: off
+      # Preciso do IP do ambiente de Produção
+      - IN: vm_site_prod_ip
+        switch: off
+      # Preciso da versão do app
+      - IN: docker_image_site
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_site_create
+          name: vm_site_prod_deploy
           runtime:
             options:
               env:
-                - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
-                - meetup_env: site
+                - service_name: site
+                - service_env: prod
+                - service_internal_port: 80
           script:
-            # Instalo dependências
-            - pip install apache-libcloud backports.ssl_match_hostname
             # Solicito dados do repositório
             - pushd $(shipctl get_resource_state "qconsp-ops")/ansible
-            # Solicito informações de autenticação com a Google Cloud
-            - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_create.yml --extra-vars "meetup_env=${meetup_env} os_image_version=${OS_IMAGE_VERSION_VERSIONNAME}"
-      # A saída é a instância do Site
-      - OUT: vm_site_ip
-        overwrite: true
+            - ansible-playbook gcp_instance_deploy.yml --extra-vars "service_name=${service_name} service_env=${service_env} service_internal_port=${service_internal_port} vm_ip=${external_ip} service_version=${DOCKER_IMAGE_SITE_VERSIONNAME} instance_key=${LOWBIT_KEY_PRIVATE_KEY_PATH}"
 
-  # Deleta a VM de Testes
-  - name: vm_test_destroy
+  # Deleta a VM de Testes da Aplicação
+  - name: vm_app_test_destroy
     type: runSh
     # dependencyMode: strict
     steps:
       # O gatilho para esta atividade é um Deploy em Produção
-      - IN: vm_prod_deploy
+      - IN: vm_app_prod_deploy
         switch: on
       # Vou usar este repositório
       - IN: qconsp-ops
@@ -301,12 +374,13 @@ jobs:
         switch: off
       # Agora é a tarefa...
       - TASK:
-          name: vm_test_destroy
+          name: vm_app_test_destroy
           runtime:
             options:
               env:
                 - GCE_CREDENTIALS_FILE_PATH: "gcp_key.json"
-                - meetup_env: test
+                - service_name: app
+                - service_env: test
           script:
             # Instalo dependências
             - pip install apache-libcloud backports.ssl_match_hostname
@@ -315,4 +389,4 @@ jobs:
             # Solicito informações de autenticação com a Google Cloud
             - echo $(shipctl get_integration_resource_field google_cloud JSON_key) > $GCE_CREDENTIALS_FILE_PATH
             # Chamo a automação
-            - ansible-playbook gcp_instance_destroy.yml --extra-vars "meetup_env=${meetup_env}"
+            - ansible-playbook gcp_instance_destroy.yml --extra-vars "service_name=${service_name} service_env=${service_env}"
